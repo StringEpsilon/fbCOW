@@ -13,12 +13,9 @@ type fbString
 end type
 
 type fbCOWItem
-	private:
-		_destructable as boolean = false
-		_refCount as uinteger
-		_cowItemRef as fbCOWItem ptr
-		
+
 	public:
+		refCount as uinteger
 		stringPtr as fbstring ptr
 		
 		declare constructor()
@@ -30,35 +27,16 @@ constructor fbCOWItem()
 end constructor
 
 destructor fbCOWItem()
-	' This has to be the weirdest line of code I ever had to write:
-	if ( @this = 0 ) then return 
-	
-	' If we are referencing other instances, inform them of the destruction:
-	if ( this._cowItemRef <> 0 ) then
-		this._cowItemRef->_refCount -= 1
-		if ( this._cowItemRef->_destructable ) then
-			this._cowItemRef->destructor()
-		end if
-		this._cowItemRef = 0
-		this.stringPtr = 0
-	else
-		' Don't destruct this, if other instances still point at it.
-		if ( this._refCount = 0 ) then
-			if ( stringPtr <> 0 ) then
-				deallocate(this.stringPtr->stringData)
-				deallocate(this.stringPtr)
-			end if
-			stringPtr = 0
-		else
-			this._destructable = true
-		end if
+	this.refCount -= 1
+	if ( this.refCount < 1 ) then
+		deallocate(this.stringPtr->stringData)
+		deallocate(this.stringPtr)
 	end if
 end destructor
 
 type fbCOW 
 	private: 
 		_payload as fbCOWItem ptr
-	
 	public:
 		declare constructor()
 		declare constructor(byref value as string)
@@ -89,8 +67,13 @@ constructor fbCOW()
 end constructor
 
 destructor fbCOW()
-	' If we are referencing other instances, inform them of the destruction:
-	this._payload->destructor
+	if ( this._payload = 0) then return 
+	
+	if ( this._payload->refcount = 0) then
+		delete this._payload
+	else
+		this._payload->destructor
+	end if
 end destructor
 
 operator fbCOW.cast() as string
@@ -99,10 +82,11 @@ end operator
 
 operator fbCOW.let(copy as fbCOW) 
 	if ( this._payload <> 0 ) then
-		this._payload->destructor()
+		this._payload->destructor
 	end if
 	
 	this._payload = copy._payload
+	this._payload->refCount += 1
 end operator
 
 operator fbCOW.+= (value as string)
@@ -122,8 +106,11 @@ operator fbCOW.+= (value as string)
 	
 	memcpy( newData->stringData, this._payload->stringPtr->StringData, this._payload->stringPtr->length )
 	memcpy( newData->stringData + this._payload->stringPtr->length, valuePtr->StringData, valuePtr->length )
-	this.destructor
+	this._payload->refCount -= 1
+	this._payload = new fbCowItem
+	this._payload->refcount += 1
 	this._payload->stringPtr = newData
+	
 end operator
 
 operator fbCOW.[](index as uinteger) as ubyte
