@@ -46,14 +46,14 @@ end constructor
 
 destructor fbCOW()
 	' Don't destruct this, if other instances still point at it.
-	if (this._refCount = 0) then
+	if ( this._refCount = 0 ) then
 		deallocate(this._stringPtr->stringData)
 		deallocate(this._stringPtr)
 	end if
 	' If we are referencing other instances, inform them of the destruction:
 	if ( this._cowRef <> 0 ) then
 		this._cowRef->_refCount -= 1
-		deallocate this._stringPtr
+		'deallocate this._stringPtr
 		this._cowRef = 0
 	end if
 end destructor
@@ -66,6 +66,12 @@ operator fbCOW.let(copy as fbCOW)
 	if ( this._stringPtr <> 0 ) then
 		this.destructor()
 	end if
+	
+	this._cowRef = @copy
+	copy._refCount += 1
+	
+	this._stringPtr = copy._stringPtr
+	
 end operator
 
 operator fbCOW.+= (value as string)
