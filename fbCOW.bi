@@ -30,6 +30,9 @@ constructor fbCOWItem()
 end constructor
 
 destructor fbCOWItem()
+	' This has to be the weirdest line of code I ever had to write:
+	if ( @this = 0 ) then return 
+	
 	' If we are referencing other instances, inform them of the destruction:
 	if ( this._cowItemRef <> 0 ) then
 		this._cowItemRef->_refCount -= 1
@@ -69,8 +72,6 @@ type fbCOW
 		declare operator [](index as uinteger) as ubyte		
 		declare function length() as integer
 end type
-
-
 
 constructor fbCOW(byref value as string)
 	this._payload = new fbCowItem

@@ -1,19 +1,31 @@
 #include once "fbCOW.bi"
 
-dim test as fbCOW = "Hello World"
-dim copy as fbCOW 
-dim copy2 as fbCOW 
-copy = test
-copy2 = test
-dim as string test2 = test
+sub StressTestCow(value as string, count as uinteger)
+	dim array(count) as fbCow
+	dim original as fbCow = value
+	for i as integer = 1 to count
+		array(i) = original
+	next
+end sub
 
-test += "!"
-print test
-print test2
-print copy
-print strptr(test2)
+sub StressTestString(value as string, count as uinteger)
+	dim array(count) as string
+	dim original as string = value
+	for i as integer = 1 to count
+		array(i) = original
+	next
+end sub
 
-'test += "!"
-print test
-print test2
-print copy
+
+dim as double t1, t2
+t1 = timer
+StressTestCow("Hello World", 10000000)
+t2 = timer
+
+print t2 - t1
+
+t1 = timer
+StressTestString("Hello World", 10000000)
+t2 = timer
+
+print t2 - t1
