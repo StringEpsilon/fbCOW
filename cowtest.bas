@@ -3,7 +3,12 @@
 sub StressTestCow(value as string, count as uinteger)
 	dim array(count) as fbCow
 	dim original as fbCow = value
-	for i as integer = 1 to count
+	for i as integer = 1 to count /2
+		array(i) = original
+	next
+
+	original += ", Hello Reader!"
+	for i as integer = count / 2 +1 to count
 		array(i) = original
 	next
 end sub
@@ -14,18 +19,23 @@ sub StressTestString(value as string, count as uinteger)
 	for i as integer = 1 to count
 		array(i) = original
 	next
+	
+	original += ", Hello Reader!"
+	for i as integer = count / 2 +1 to count
+		array(i) = original
+	next
 end sub
 
-
+dim as integer count = 1000000
 dim as double t1, t2
 t1 = timer
-StressTestCow("Hello World", 10000000)
+StressTestCow("Hello World", count)
 t2 = timer
 
 print t2 - t1
 
 t1 = timer
-StressTestString("Hello World", 10000000)
+StressTestString("Hello World", count)
 t2 = timer
 
 print t2 - t1
