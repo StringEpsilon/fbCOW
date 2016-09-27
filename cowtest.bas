@@ -39,3 +39,15 @@ StressTestString("Hello World", count)
 t2 = timer
 
 print t2 - t1
+
+dim as fbCOW cow = "Hello World!"
+dim as string hello = "Hello World!"
+print cow.Left(5) &"<"
+print cow.Right(6)&"<"
+print cow.Mid(7,5)&"<"
+
+print
+print left(hello, 5)&"<"
+print right(hello, 6)&"<"
+print Mid(hello, 7, 5)&"<"
+? len(hello)

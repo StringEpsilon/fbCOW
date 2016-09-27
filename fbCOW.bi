@@ -46,6 +46,7 @@ end destructor
 type fbCOW
 	private: 
 		_payload as fbCOWItem ptr = 0
+		declare function ShadowCopy(stringLength as uinteger = 0) as fbCowItem ptr
 	
 	public:
 		declare constructor()
@@ -60,13 +61,15 @@ type fbCOW
 		
 		declare operator [](index as uinteger) as ubyte		
 		
-		declare function length() as integer
+		declare function GetLength() as integer
 		
-		declare function equals overload (value as fbCOW) as boolean 
-		declare function equals(value as string) as boolean
+		declare function Equals overload (value as fbCOW) as boolean 
+		declare function Equals(value as string) as boolean
 		
-		declare function MID(start as uinteger, l as uinteger) as fbCow
-		declare function MIDtoString(start as uinteger, l as uinteger) as string
+		declare function Mid(start as uinteger, length as uinteger) as fbCow
+		declare function Left(length as uinteger) as fbCow
+		declare function Right(length as uinteger) as fbCow
+		declare function MIDtoString(start as uinteger, length as uinteger) as string
 end type
 
 constructor fbCOW(byref value as string)
@@ -141,12 +144,29 @@ operator fbCOW.[](index as uinteger) as ubyte
 end operator
 
 operator len(cow as fbCOW) as integer
-	return cow.length()
+	return cow.getLength()
 end operator
+
+' Private functions
+
+function fbCow.ShadowCopy(stringLength as uinteger = 0) as fbCowItem ptr
+	dim result as fbCowItem ptr
+	
+	this._payload->refcount += 1
+	
+	result = new fbCowItem()
+	result->stringPtr = new fbString
+	result->ref = this._payload
+		
+	result->stringPtr->length = stringLength
+	result->stringPtr->size = stringLength
+	result->stringPtr->stringData = this._payload->stringPtr->stringData
+	return result
+end function
 
 ' Public functions
 
-function fbCOW.length() as integer
+function fbCOW.GetLength() as integer
 	return this._payload->stringPtr->length
 end function
 
@@ -164,42 +184,57 @@ function fbCOw.Equals(value as string) as boolean
 	return tempstring = value
 end function
 
-function fbCow.MID(start as uinteger, l as uinteger) as fbCOW
-	if ( start > this.length ) then
+function fbCow.MID(start as uinteger, length as uinteger) as fbCOW
+	start -=1 ' start is the first included(!) character. Going -1 makes stuff easier.
+	if ( start > this.GetLength() ) then
 		return fbCow()
 	end if
 	
-	if ( start + l > this.length ) then
-		l = this.length - start
+	if ( start + length > this.GetLength() ) then
+		length = this.GetLength() - start
 	end if
 	
-	dim result as fbCOW 'ptr = new fbCow()
-	this._payload->refcount += 1
-	
-	result._payload = new fbCowItem()
-	result._payload->stringPtr = new fbString
-	result._payload->ref = this._payload
-	
-	result._payload->stringPtr->length = l
-	result._payload->stringPtr->size = l
-	result._payload->stringPtr->stringData = this._payload->stringPtr->stringData + start
+	dim result as fbCOW
+	result._payload = this.ShadowCopy(length) 
+	result._payload->stringPtr->stringData += start
 	return result
 end function
 
-function fbCow.MIDtoString(start as uinteger, l as uinteger) as string
-	if ( start > this.length ) then
+function fbCow.Left(length as uinteger) as fbCOW
+	if ( length >= this.GetLength() ) then
+		return fbCow(this)
+	end if
+	
+	dim result as fbCOW
+	result._payload = this.ShadowCopy(length) 
+	return result
+end function
+
+function fbCow.Right(length as uinteger) as fbCOW
+	if ( length >= this.GetLength() ) then
+		return fbCow(this)
+	end if
+	dim result as fbCOW
+	result._payload = this.ShadowCopy(length) 
+	result._payload->stringPtr->stringData += (this._payload->stringPtr->length - length)
+	return result
+end function
+
+function fbCow.MIDtoString(start as uinteger, length as uinteger) as string
+	start -=1
+	if ( start > this.GetLength() ) then
 		return fbCow()
 	end if
 	
-	if ( start + l > this.length ) then
-		l = this.length - start
+	if ( start + length > this.GetLength() ) then
+		length = this.GetLength - start
 	end if
 	
 	dim result as string
 	dim resultPtr as fbString ptr = cast(fbstring ptr, @result)
 	
-	resultPtr->length = l
-	resultPtr->size = l
+	resultPtr->length = length
+	resultPtr->size = length
 	resultPtr->stringData = allocate(resultPtr->size)
 	memcpy( resultPtr->stringData, this._payload->stringPtr->stringData + start, resultPtr->size )
 	return result
