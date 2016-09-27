@@ -42,8 +42,8 @@ print t2 - t1
 
 dim as fbCOW cow = "Hello World!"
 dim as string hello = "Hello World!"
-print cow.Left(5) &"<"
-print cow.Right(6)&"<"
+print cow.LeftString(5) &"<"
+print cow.RightString(6)&"<"
 print cow.Mid(7,5)&"<"
 
 print

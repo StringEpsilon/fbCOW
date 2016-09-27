@@ -69,7 +69,9 @@ type fbCOW
 		declare function Mid(start as uinteger, length as uinteger) as fbCow
 		declare function Left(length as uinteger) as fbCow
 		declare function Right(length as uinteger) as fbCow
-		declare function MIDtoString(start as uinteger, length as uinteger) as string
+		declare function LeftString(length as uinteger) as string
+		declare function RightString(length as uinteger) as string
+		declare function MIDString(start as uinteger, length as uinteger) as string
 end type
 
 constructor fbCOW(byref value as string)
@@ -210,6 +212,21 @@ function fbCow.Left(length as uinteger) as fbCOW
 	return result
 end function
 
+
+function fbCow.LeftString(length as uinteger) as string
+	if ( length >= this.GetLength() ) then
+		return fbCow(this)
+	end if
+	dim result as string
+	dim resultPtr as fbString ptr = cast(fbstring ptr, @result)
+	
+	resultPtr->length = length
+	resultPtr->size = length
+	resultPtr->stringData = allocate(resultPtr->size)
+	memcpy( resultPtr->stringData, this._payload->stringPtr->stringData , resultPtr->size )
+	return result
+end function
+
 function fbCow.Right(length as uinteger) as fbCOW
 	if ( length >= this.GetLength() ) then
 		return fbCow(this)
@@ -220,7 +237,22 @@ function fbCow.Right(length as uinteger) as fbCOW
 	return result
 end function
 
-function fbCow.MIDtoString(start as uinteger, length as uinteger) as string
+function fbCow.RightString(length as uinteger) as string
+	if ( length >= this.GetLength() ) then
+		return fbCow(this)
+	end if
+	dim result as string
+	dim resultPtr as fbString ptr = cast(fbstring ptr, @result)
+	
+	resultPtr->length = length
+	resultPtr->size = length
+	resultPtr->stringData = allocate(resultPtr->size)
+	memcpy( resultPtr->stringData, this._payload->stringPtr->stringData + (this._payload->stringPtr->length - length) , resultPtr->size )
+	return result
+end function
+
+
+function fbCow.MIDString(start as uinteger, length as uinteger) as string
 	start -=1
 	if ( start > this.GetLength() ) then
 		return fbCow()
