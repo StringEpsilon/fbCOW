@@ -66,6 +66,7 @@ type fbCOW
 		declare function equals(value as string) as boolean
 		
 		declare function MID(start as uinteger, l as uinteger) as fbCow
+		declare function MIDtoString(start as uinteger, l as uinteger) as string
 end type
 
 constructor fbCOW(byref value as string)
@@ -182,5 +183,24 @@ function fbCow.MID(start as uinteger, l as uinteger) as fbCOW
 	result._payload->stringPtr->length = l
 	result._payload->stringPtr->size = l
 	result._payload->stringPtr->stringData = this._payload->stringPtr->stringData + start
+	return result
+end function
+
+function fbCow.MIDtoString(start as uinteger, l as uinteger) as string
+	if ( start > this.length ) then
+		return fbCow()
+	end if
+	
+	if ( start + l > this.length ) then
+		l = this.length - start
+	end if
+	
+	dim result as string
+	dim resultPtr as fbString ptr = cast(fbstring ptr, @result)
+	
+	resultPtr->length = l
+	resultPtr->size = l
+	resultPtr->stringData = allocate(resultPtr->size)
+	memcpy( resultPtr->stringData, this._payload->stringPtr->stringData + start, resultPtr->size )
 	return result
 end function
