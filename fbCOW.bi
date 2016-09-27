@@ -24,7 +24,6 @@ type fbCOWItem
 end type
 
 constructor fbCOWItem()
-	'this.stringPtr = new fbstring
 	this.refcount = 1
 end constructor
 
@@ -99,7 +98,7 @@ destructor fbCOW()
 	if ( this._payload = 0) then return 
 	
 	this._payload->refCount -= 1
-	if ( this._payload->refcount <= 0) then
+	if ( this._payload->refcount = 0) then
 		delete this._payload
 	end if	
 	this._payload = 0
@@ -111,7 +110,8 @@ operator fbCOW.cast() as string
 end operator
 
 operator fbCOW.let(copy as fbCOW) 
-	this.destructor
+	this.destructor()
+	
 	if ( copy._payload <> 0) then
 		this._payload = copy._payload
 		this._payload->refCount += 1
@@ -129,13 +129,16 @@ end operator
 operator fbCOW.+= (value as string)
 	dim valuePtr as fbstring ptr = cast(fbstring ptr, @value)
 	dim newData as fbString ptr = new fbString
-
-	newData->length = this._payload->stringPtr->length + valuePtr->length
-	newData->size = newData->length 	
+	dim length as uinteger = IIF(this._payload <> 0, this._payload->stringPtr->length, 0)
+	
+	newData->length = length + valuePtr->length
+	newData->size = newData->length
 	newData->stringData = allocate( newData->size)
 	
-	memcpy( newData->stringData, this._payload->stringPtr->StringData, this._payload->stringPtr->length )
-	memcpy( newData->stringData + this._payload->stringPtr->length, valuePtr->StringData, valuePtr->length )
+	if (length <> 0) then
+		memcpy( newData->stringData, this._payload->stringPtr->StringData, length )
+	end if
+	memcpy( newData->stringData + length, valuePtr->StringData, valuePtr->length )
 	this.destructor()
 	this._payload = new fbCowItem
 	this._payload->stringPtr = newData

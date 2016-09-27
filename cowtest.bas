@@ -40,7 +40,8 @@ t2 = timer
 
 print t2 - t1
 
-dim as fbCOW cow = "Hello World!"
+dim as fbCOW cow 
+cow += "Hello World!"
 dim as string hello = "Hello World!"
 print cow.LeftString(5) &"<"
 print cow.RightString(6)&"<"
