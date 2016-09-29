@@ -62,8 +62,8 @@ type fbCOW
 		
 		declare function GetLength() as integer
 		
-		declare function Equals overload (value as fbCOW) as boolean 
-		declare function Equals(value as string) as boolean
+		declare function Equals overload (byref value as fbCOW) as boolean 
+		declare function Equals(byref value as string) as boolean
 		
 		declare function Mid(start as uinteger, length as uinteger) as fbCow
 		declare function Left(length as uinteger) as fbCow
@@ -175,21 +175,27 @@ function fbCOW.GetLength() as integer
 	return this._payload->stringPtr->length
 end function
 
-function fbCOw.Equals(value as fbCow) as boolean
-	dim result as boolean = this._payload = value._payload
-	if result = true then 
+function fbCOw.Equals(byref value as fbCow) as boolean
+	if this._payload = value._payload then 
 		return true
 	else
-		return cast(string, value) = cast(string, this)
+		if(strcmp(value._payload->stringPtr->stringData, this._payload->stringPtr->stringData) = 0) then
+			return true
+		end if
 	end if
+	return false
 end function
 
-function fbCOw.Equals(value as string) as boolean
-	dim as string tempstring = this
-	return tempstring = value
+function fbCOw.Equals(byref value as string) as boolean
+	if strcmp(strptr(value), this._payload->stringPtr->stringData) = 0 then
+		return true
+	end if
+	return false
 end function
 
 function fbCow.MID(start as uinteger, length as uinteger) as fbCOW
+	if (start = 0) then return fbCow()
+	
 	start -=1 ' start is the first included(!) character. Going -1 makes stuff easier.
 	if ( start > this.GetLength() ) then
 		return fbCow()
