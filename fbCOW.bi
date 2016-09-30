@@ -6,11 +6,13 @@
 
 #include "crt.bi"
 
+#ifndef fbString
 type fbString
     dim as byte ptr stringData 
     dim as uinteger length
     dim as uinteger size
 end type
+#endif
 
 type fbCOWItem
 
@@ -110,7 +112,7 @@ operator fbCOW.cast() as string
 end operator
 
 operator fbCOW.let(copy as fbCOW) 
-	this.destructor()
+	if (this._payload <> 0) then this.destructor()
 	
 	if ( copy._payload <> 0) then
 		this._payload = copy._payload
@@ -162,7 +164,7 @@ function fbCow.ShadowCopy(stringLength as uinteger = 0) as fbCowItem ptr
 	result = new fbCowItem()
 	result->stringPtr = new fbString
 	result->ref = this._payload
-		
+	
 	result->stringPtr->length = stringLength
 	result->stringPtr->size = stringLength
 	result->stringPtr->stringData = this._payload->stringPtr->stringData
@@ -201,8 +203,8 @@ function fbCow.MID(start as uinteger, length as uinteger) as fbCOW
 		return fbCow()
 	end if
 	
-	if ( start + length > this.GetLength() ) then
-		length = this.GetLength() - start
+	if ( start + length > this._payload->stringPtr->length ) then
+		length = this._payload->stringPtr->length - start
 	end if
 	
 	dim result as fbCOW
@@ -259,7 +261,6 @@ function fbCow.RightString(length as uinteger) as string
 	memcpy( resultPtr->stringData, this._payload->stringPtr->stringData + (this._payload->stringPtr->length - length) , resultPtr->size )
 	return result
 end function
-
 
 function fbCow.MIDString(start as uinteger, length as uinteger) as string
 	start -=1
